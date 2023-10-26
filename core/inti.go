@@ -18,6 +18,11 @@ import (
 	_salaRepo "notification/core/sala/repository"
 	_salaUcase "notification/core/sala/usecase"
 
+	//Conversation
+	_conversationKafka "notification/core/conversation/delivery/kafka"
+	_conversationRepo "notification/core/conversation/repository"
+	_conversationUcase "notification/core/conversation/usecase"
+
 	//Billing
 	_billingKafka "notification/core/billing/delivery/kafka"
 	_billingRepo "notification/core/billing/repository"
@@ -42,7 +47,7 @@ func Init(db *sql.DB, firebase *_firebase.App) {
 	billinKafka := _billingKafka.NewKafkaHandler(billingU)
 
 	grupoRepo := _messageRepo.NewRepository(db)
-	grupoUcase := _messageUcase.NewUseCase(grupoRepo, firebase, timeout,utilU)
+	grupoUcase := _messageUcase.NewUseCase(grupoRepo, firebase, timeout, utilU)
 
 	grupoKafka := _messageKafka.NewKafkaHandler(grupoUcase)
 
@@ -50,12 +55,17 @@ func Init(db *sql.DB, firebase *_firebase.App) {
 	salaUseCase := _salaUcase.NewUseCase(salaRepo, firebase, timeout, utilU, billingR)
 	salaKafka := _salaKafka.NewKafkaHandler(salaUseCase)
 
+	conversation := _conversationRepo.NewRepository(db)
+	conversationU := _conversationUcase.NewUseCase(conversation, firebase, timeout, utilU)
+	conversationKafka := _conversationKafka.NewKafkaHandler(conversationU)
+
 	go salaKafka.SalaReservationConflictConsumer()
 	go grupoKafka.MessageGroupConsumer()
 	go grupoKafka.SalaCreationConsumer()
 	go salaKafka.SalaConsumer()
 	go billinKafka.BillingNotificationConsumer()
 	go salaKafka.MessageSalaConsumer()
+	go conversationKafka.MessageConversationConsumer()
 
 	quitChannel := make(chan os.Signal, 1)
 	signal.Notify(quitChannel, syscall.SIGINT, syscall.SIGTERM)

@@ -62,14 +62,14 @@ func (u *salaUseCase)SendNotificationMessageSala(ctx context.Context,message []b
 	for _, val := range fcm_tokens {
 		ids = append(ids, val.ProfileId)
 		// tokens = append(tokens, val.FcmToken)
-		u.utilU.SendNotification(ctx, val.FcmToken, byteMessages, r.NotificationMessageGroup,u.firebase)
+		if val.FcmToken != nil {
+			u.utilU.SendNotification(ctx, *val.FcmToken, byteMessages, r.NotificationMessageGroup,u.firebase)
+		}
 	}
-	payloadData := struct {
-		Ids  []int  `json:"ids"`
-		Data []byte `json:"data"`
-	}{
+	payloadData := r.MessageNotify{
 		Ids:  ids,
 		Data: message,
+		SenderId: data.ProfileId,
 	}
 	posturl := fmt.Sprintf("%s/ws/publish/grupo/message/", viper.GetString("hosts.main"))
 	// JSON body
@@ -154,7 +154,9 @@ func (u *salaUseCase) SendNotificationUsersSala2(ctx context.Context,message r.S
 	data, err := json.Marshal(message)
 	for _, val := range res {
 		log.Println("FCM_TOKENS", val.FcmToken)
-		u.utilU.SendNotification(ctx, val.FcmToken, data,notification, u.firebase)
+		if val.FcmToken != nil {
+			u.utilU.SendNotification(ctx, *val.FcmToken, data,notification, u.firebase)
+		}
 	}
 	return
 }
@@ -163,7 +165,9 @@ func (u *salaUseCase) SendNotificationUsersSala(ctx context.Context,message r.Me
 	res, err := u.salaRepo.GetFcmTokensUserSalasSala(ctx, message.EntityId)
 	data, err := json.Marshal(message)
 	for _, val := range res {
-		u.utilU.SendNotification(ctx, val.FcmToken, data,notification, u.firebase)
+		if val.FcmToken != nil{
+			u.utilU.SendNotification(ctx,*val.FcmToken, data,notification, u.firebase)
+		}
 	}
 	return
 }

@@ -46,8 +46,10 @@ func (u *grupoUcase) SendNotificationSalaCreation(ctx context.Context, payload [
 	}
 	// tokens := make([]string, len(fcm_tokens))
 	for _, val := range fcm_tokens {
-		// tokens = append(tokens, val.FcmToken)
-		u.utilU.SendNotification(ctx, val.FcmToken, payload, r.NotificationSalaCreation,u.firebase)
+		// tokens = append(tokens, val.FcmToken)\
+		if val.FcmToken != nil {
+			u.utilU.SendNotification(ctx, *val.FcmToken, payload, r.NotificationSalaCreation,u.firebase)
+		}
 	}
 	return
 }
@@ -80,14 +82,14 @@ func (u *grupoUcase) SendNotificationToUsersGroup(ctx context.Context, message [
 	for _, val := range fcm_tokens {
 		ids = append(ids, val.ProfileId)
 		// tokens = append(tokens, val.FcmToken)
-		u.utilU.SendNotification(ctx, val.FcmToken, byteMessages, r.NotificationMessageGroup,u.firebase)
+		if val.FcmToken != nil {
+			u.utilU.SendNotification(ctx, *val.FcmToken, byteMessages, r.NotificationMessageGroup,u.firebase)
+		}
 	}
-	payloadData := struct {
-		Ids  []int  `json:"ids"`
-		Data []byte `json:"data"`
-	}{
+	payloadData := r.MessageNotify{
 		Ids:  ids,
 		Data: message,
+		SenderId: data.ProfileId,
 	}
 	posturl := fmt.Sprintf("%s/ws/publish/grupo/message/", viper.GetString("hosts.main"))
 	// JSON body

@@ -14,7 +14,7 @@ type GrupoUseCase interface {
 	SendNotificationSalaCreation(ctx context.Context, payload []byte) (err error)
 }
 type FcmToken struct {
-	FcmToken  string
+	FcmToken  *string
 	ProfileId int
 }
 type ProfileUser struct {
@@ -44,6 +44,7 @@ type Message struct {
 	Data        *string          `json:"data"`
 	CreatedAt   string           `json:"created_at,omitempty"`
 	ParentId    int              `json:"parent_id"`
+	IsUser      bool             `json:"is_user"`
 	ReplyTo     *int             `json:"reply_to"`
 	// ReplyMessage ReplyMessage     `json:"reply_message"`
 }

@@ -23,12 +23,17 @@ const (
 	NotificationBilling = 5
 )
 
-
-
-
 type ConsumoType int8
 
 const (
 	ReservaInstalacion ConsumoType = 0
 	ReservaSala = 1
+)
+
+type UserAdminEstado int8
+
+const (
+	UserAdminEnabled  UserAdminEstado = 0
+	UserAdminDisabled UserAdminEstado = 1
+	UserAdminDeleted  UserAdminEstado = 2
 )
