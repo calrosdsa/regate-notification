@@ -18,10 +18,11 @@ func NewRepository(sql *sql.DB) r.GrupoRepository {
 	}
 }
 
-func (p grupoRepository) GetLastMessagesFromGroup(ctx context.Context, id int) (res []r.MessageGroupPayload, err error) {
-	query := `select m.id,m.grupo_id,m.content,m.created_at,p.nombre,p.apellido,p.profile_photo,m.profile_id,m.reply_to,m.type_message
+func (p grupoRepository) GetLastMessagesFromGroup(ctx context.Context, id int) (res []r.MessagePayload, err error) {
+	query := `select m.id,m.chat_id,m.content,m.created_at,p.nombre,p.apellido,p.profile_photo,m.profile_id,m.reply_to,
+	m.type_message,m.grupo_id
 	 from grupo_message as m inner join profiles as p on p.profile_id = m.profile_id
-	where grupo_id = $1
+	where chat_id = $1
 	order by created_at desc limit 3`
 	res, err = p.fetchMessagesGrupo(ctx, query, id)
 	return
@@ -61,7 +62,7 @@ func (p *grupoRepository) fetchFcmTokens(ctx context.Context, query string, args
 	return res, nil
 }
 
-func (p *grupoRepository) fetchMessagesGrupo(ctx context.Context, query string, args ...interface{}) (res []r.MessageGroupPayload, err error) {
+func (p *grupoRepository) fetchMessagesGrupo(ctx context.Context, query string, args ...interface{}) (res []r.MessagePayload, err error) {
 	rows, err := p.Conn.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
@@ -72,20 +73,21 @@ func (p *grupoRepository) fetchMessagesGrupo(ctx context.Context, query string, 
 			log.Println(errRow)
 		}
 	}()
-	res = make([]r.MessageGroupPayload, 0)
+	res = make([]r.MessagePayload, 0)
 	for rows.Next() {
-		t := r.MessageGroupPayload{}
+		t := r.MessagePayload{}
 		err = rows.Scan(
-			&t.Id,
-			&t.GrupoId,
-			&t.Content,
-			&t.CreatedAt,
-			&t.ProfileName,
-			&t.ProfileApellido,
-			&t.ProfilePhoto,
-			&t.ProfileId,
-			&t.ReplyTo,
-			&t.TypeMessage,
+			&t.Message.Id,
+			&t.Message.ChatId,
+			&t.Message.Content,
+			&t.Message.CreatedAt,
+			&t.Profile.ProfileName,
+			&t.Profile.ProfileApellido,
+			&t.Profile.ProfilePhoto,
+			&t.Profile.ProfileId,
+			&t.Message.ReplyTo,
+			&t.Message.TypeMessage,
+			&t.Message.ParentId,
 		)
 		res = append(res, t)
 	}

@@ -42,7 +42,7 @@ func Init(db *sql.DB, firebase *_firebase.App) {
 	billinKafka := _billingKafka.NewKafkaHandler(billingU)
 
 	grupoRepo := _messageRepo.NewRepository(db)
-	grupoUcase := _messageUcase.NewUseCase(grupoRepo, firebase, timeout)
+	grupoUcase := _messageUcase.NewUseCase(grupoRepo, firebase, timeout,utilU)
 
 	grupoKafka := _messageKafka.NewKafkaHandler(grupoUcase)
 
@@ -55,6 +55,7 @@ func Init(db *sql.DB, firebase *_firebase.App) {
 	go grupoKafka.SalaCreationConsumer()
 	go salaKafka.SalaConsumer()
 	go billinKafka.BillingNotificationConsumer()
+	go salaKafka.MessageSalaConsumer()
 
 	quitChannel := make(chan os.Signal, 1)
 	signal.Notify(quitChannel, syscall.SIGINT, syscall.SIGTERM)

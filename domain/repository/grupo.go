@@ -3,7 +3,7 @@ package repository
 import "context"
 
 type GrupoRepository interface {
-	GetLastMessagesFromGroup(ctx context.Context, id int) ([]MessageGroupPayload, error)
+	GetLastMessagesFromGroup(ctx context.Context, id int) ([]MessagePayload, error)
 	GetUsersFromGroup(ctx context.Context, id int) ([]FcmToken, error)
 }
 
@@ -14,7 +14,7 @@ type GrupoUseCase interface {
 	SendNotificationSalaCreation(ctx context.Context, payload []byte) (err error)
 }
 type FcmToken struct {
-	FcmToken string
+	FcmToken  string
 	ProfileId int
 }
 type ProfileUser struct {
@@ -27,18 +27,30 @@ type ProfileUser struct {
 	UserGrupoId int     `json:"user_grupo_id,omitempty"`
 	FcmToken    *string `json:"fcm_token"`
 }
+type ProfileBase struct {
+	ProfileName     string  `json:"name"`
+	ProfileApellido *string `json:"apellido"`
+	ProfilePhoto    *string `json:"profile_photo"`
+	ProfileId       int     `json:"id"`
+}
 
-type MessageGroupPayload struct {
-	Id              int              `json:"id"`
-	GrupoId         int              `json:"grupo_id"`
-	Content         string           `json:"content"`
-	CreatedAt       string           `json:"created_at,omitempty"`
-	ProfileName     string           `json:"profile_name"`
-	ProfileApellido *string          `json:"profile_apellido"`
-	ProfilePhoto    *string          `json:"profile_photo"`
-	ProfileId       int              `json:"profile_id"`
-	ReplyTo         *int             `json:"reply_to"`
-	TypeMessage     GrupoMessageType `json:"type_message"`
+type Message struct {
+	Id          int              `json:"id"`
+	LocalId     int64            `json:"local_id"`
+	ChatId      int              `json:"chat_id"`
+	ProfileId   int              `json:"profile_id"`
+	TypeMessage GrupoMessageType `json:"type_message"`
+	Content     string           `json:"content"`
+	Data        *string          `json:"data"`
+	CreatedAt   string           `json:"created_at,omitempty"`
+	ParentId    int              `json:"parent_id"`
+	ReplyTo     *int             `json:"reply_to"`
+	// ReplyMessage ReplyMessage     `json:"reply_message"`
+}
+
+type MessagePayload struct {
+	Message Message     `json:"message"`
+	Profile ProfileBase `json:"profile"`
 }
 type GrupoMessageType int8
 
@@ -49,4 +61,3 @@ const (
 )
 
 //
-

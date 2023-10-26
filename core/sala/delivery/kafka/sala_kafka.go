@@ -66,3 +66,30 @@ func (k *SalaKafkaHander) SalaConsumer() {
 		log.Fatal("failed to close reader:", err)
 	}
 }
+
+
+func (k *SalaKafkaHander) MessageSalaConsumer() {
+	r := kafka.NewReader(kafka.ReaderConfig{
+		Brokers:   []string{viper.GetString("kafka.host")},
+		Topic:     "notification-message-sala",
+		GroupID:   "consumer-group-messages-sala",
+		Partition: 0,
+		MaxBytes:  10e6, // 10MB
+	})
+	// r.SetOffset(2)
+
+	for {
+		m, err := r.ReadMessage(context.Background())
+		if err != nil {
+			break
+		}
+		log.Println("RUNNN")
+		log.Printf("message at offset %d: %s = %s\n %s", m.Offset, string(m.Key), string(m.Value), m.Time.Local().String())
+		err = k.salaU.SendNotificationMessageSala(context.Background(), m.Value)
+		log.Println(err)
+	}
+
+	if err := r.Close(); err != nil {
+		log.Fatal("failed to close reader:", err)
+	}
+}
