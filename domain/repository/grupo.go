@@ -10,7 +10,7 @@ type GrupoRepository interface {
 type GrupoUseCase interface {
 	// GetLastMessagesFromGroup(ctx context.Context, id int) ([]MessageGrupo, error)
 	// GetUsersFromGroup(ctx context.Context, id int) ([]ProfileUser, error)
-	SendNotificationToUsersGroup(ctx context.Context, message []byte) (err error)
+	SendNotificationToUsersGroup(ctx context.Context, message []byte) (err error)	
 	SendNotificationSalaCreation(ctx context.Context, payload []byte) (err error)
 }
 type FcmToken struct {
