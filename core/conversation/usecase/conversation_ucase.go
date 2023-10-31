@@ -9,6 +9,7 @@ import (
 	r "notification/domain/repository"
 
 	"github.com/goccy/go-json"
+	"github.com/segmentio/kafka-go"
 
 	// "strconv"
 
@@ -24,15 +25,17 @@ type conversationUseCase struct {
 	timeout     time.Duration
 	firebase    *firebase.App
 	utilU       r.UtilUseCase
+	wsAccountW  *kafka.Writer
 }
 
 func NewUseCase(conversationRepo r.ConversationRepository, firebase *firebase.App,
-	timeout time.Duration, utilU r.UtilUseCase) r.ConversationUseCase {
+	timeout time.Duration, utilU r.UtilUseCase,wsAccountW *kafka.Writer) r.ConversationUseCase {
 	return &conversationUseCase{
 		conversationRepo: conversationRepo,
 		firebase:    firebase,
 		timeout:     timeout,
 		utilU:       utilU,
+		wsAccountW: wsAccountW,
 	}
 }
 
@@ -43,9 +46,10 @@ func (u *conversationUseCase) SendNotificationMessageConversation(ctx context.Co
 	var data r.Message
 	err = json.Unmarshal(message, &data)
 	if err != nil {
-		return
+		u.utilU.LogError("SendNotificationMessage_Unmarshal(message,&data)","conversation_usecase",err.Error())
 	}
-
+	log.Println(data)
+	
 	// log.Println("GRUPOID", data.ParentId)
 	// fcm_tokens, err := u.conversationRepo.(ctx, data.ParentId)
 	// if err != nil {
@@ -56,7 +60,7 @@ func (u *conversationUseCase) SendNotificationMessageConversation(ctx context.Co
 	if data.IsUser {
 		fcm_tokens,err := u.conversationRepo.GetFcmTokenFromEstablecimientoAdmins(ctx,data.ParentId)
 		if err != nil {
-			log.Println("TOKEN ERROR", err)
+			u.utilU.LogError("SendNotificationMessage_GetFcmTokenFromEstablecimientoAdmins","conversation_usecase",err.Error())
 		}
 		for _,val := range fcm_tokens{
 			log.Println("TOKEN",val.FcmToken)
@@ -67,7 +71,6 @@ func (u *conversationUseCase) SendNotificationMessageConversation(ctx context.Co
 		}
 		
 	} else {
-		log.Println(string(message))
 		messages, err1 := u.conversationRepo.GetLastMessagesConversation(ctx, data.ChatId)
 		if err1 != nil {
 			return
@@ -87,31 +90,13 @@ func (u *conversationUseCase) SendNotificationMessageConversation(ctx context.Co
 	}
 	// }
 	if !data.IsUser {
-
 		ids = append(ids, data.ProfileId)
 		payloadData := r.MessageNotify{
 		Ids:      ids,
 		Data:     message,
 		SenderId: 0,
 		}
-		posturl := fmt.Sprintf("%s/ws/publish/grupo/message/", viper.GetString("hosts.main"))
-		// JSON body
-		body, err := json.Marshal(payloadData)
-		if err != nil {
-			log.Println(err)
-		}
-		// Create a HTTP post request
-		r, err := http.NewRequest("POST", posturl, bytes.NewBuffer(body))
-		if err != nil {
-			panic(err)
-		}
-		r.Header.Add("Content-Type", "application/json")
-		client := &http.Client{}
-		res, err := client.Do(r)
-		if err != nil {
-			panic(err)
-		}
-		defer res.Body.Close()
+		u.utilU.SendMessageToKafka(u.wsAccountW,payloadData,string(r.KafkaPublishMessageEvent))
 	}else {
 
 		payloadData := r.MessageNotify{

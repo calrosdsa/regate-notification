@@ -11,8 +11,10 @@ import (
 
 	firebase "firebase.google.com/go"
 	"firebase.google.com/go/messaging"
-	"github.com/spf13/viper"
+	"github.com/goccy/go-json"
+	"github.com/segmentio/kafka-go"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 )
 type utilUseCase struct {
 	timeout time.Duration
@@ -24,6 +26,22 @@ func NewUseCase(timeout time.Duration,utilRepo r.UtilRepository) r.UtilUseCase{
 		timeout: timeout,
 		utilRepo: utilRepo,
 	}
+}
+
+func (u *utilUseCase)SendMessageToKafka(w *kafka.Writer,data interface{},key string){
+	json, err := json.Marshal(data)
+		if err != nil {
+			log.Println("Fail to parse", err)
+		}
+		err = w.WriteMessages(context.Background(),
+			kafka.Message{
+				Key:   []byte(key),
+				Value: json,
+			},
+		)
+		if err != nil {
+			u.LogError("SendMessageToKafka","util_usecase",err.Error())
+		}
 }
 
 func (u *utilUseCase)GetProfileFcmToken(ctx context.Context,id int)(res string,err error){
@@ -76,7 +94,6 @@ func (u *utilUseCase) SendNotificationToAdmin(ctx context.Context, tokens string
 			"payload":  payload,
 		},
 	}
-
 	response, err := client.Send(ctx, message)
 	if err != nil {
 		log.Println("FAIL TO SEND",err)

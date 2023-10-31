@@ -34,10 +34,18 @@ import (
 	"os"
 
 	_firebase "firebase.google.com/go"
+	"github.com/segmentio/kafka-go"
+	"github.com/spf13/viper"
 )
 
 func Init(db *sql.DB, firebase *_firebase.App) {
 	timeout := time.Duration(5) * time.Second
+
+	wsAccountW := &kafka.Writer{
+		Addr:     kafka.TCP(viper.GetString("kafka.host")),
+		Topic:    "notify-ws",
+		Balancer: &kafka.LeastBytes{},
+	}
 
 	utilR := _utilRepo.NewRepo(db)
 	utilU := _utilUcase.NewUseCase(timeout, utilR)
@@ -56,7 +64,7 @@ func Init(db *sql.DB, firebase *_firebase.App) {
 	salaKafka := _salaKafka.NewKafkaHandler(salaUseCase)
 
 	conversation := _conversationRepo.NewRepository(db)
-	conversationU := _conversationUcase.NewUseCase(conversation, firebase, timeout, utilU)
+	conversationU := _conversationUcase.NewUseCase(conversation, firebase, timeout, utilU,wsAccountW)
 	conversationKafka := _conversationKafka.NewKafkaHandler(conversationU)
 
 	go salaKafka.SalaReservationConflictConsumer()
