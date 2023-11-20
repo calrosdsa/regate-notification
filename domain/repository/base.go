@@ -13,3 +13,14 @@ const (
 	KafkaDeleteMessageEvent KafkaMessageEvent = "delete-message"
 	KafkaPublishMessageEvent KafkaMessageEvent = "publish-message"
 )
+
+type TypeEntity int8
+
+const (
+	ENTITY_NONE    = 0
+	ENTITY_SALA    = 1
+	ENTITY_GRUPO   = 2
+	ENTITY_ACCOUNT = 3
+	ENTITY_BILLING = 4
+	ENTITY_RESERVA = 3
+)

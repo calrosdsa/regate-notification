@@ -10,21 +10,21 @@ import (
 	"github.com/spf13/viper"
 )
 
-type BillingHandler struct {
-	billingU r.BillingUseCase
+type SystemHandler struct {
+	systemU r.SystemUseCase
 }
 
-func NewKafkaHandler(billingU r.BillingUseCase) BillingHandler {
-	return BillingHandler{
-		billingU: billingU,
+func NewKafkaHandler(systemU r.SystemUseCase) SystemHandler {
+	return SystemHandler{
+		systemU: systemU,
 	}
 }
 
-func (k *BillingHandler) BillingNotificationConsumer() {
+func (k *SystemHandler) NotificationDiffusionConsumer() {
 	r := kafka.NewReader(kafka.ReaderConfig{	
 		Brokers:   []string{viper.GetString("kafka.host")},
 		Topic:     "system",
-		GroupID:   "consumer-group-system",
+		GroupID:   "consumer-group-diffussion",
 		Partition: 0,
 		MaxBytes:  10e6, // 10MB
 	})
@@ -35,7 +35,7 @@ func (k *BillingHandler) BillingNotificationConsumer() {
 		}
 		log.Println("RUNNN")
 		fmt.Printf("message at offset %d: %s = %s\n %s", m.Offset, string(m.Key), string(m.Value), m.Time.Local().String())
-	    k.billingU.SendNotificationUserBilling(context.TODO(), m.Value)
+	    k.systemU.SendNotificationDiffusion(context.TODO(), m.Value)
 	}
 
 	if err := r.Close(); err != nil {
