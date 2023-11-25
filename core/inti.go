@@ -28,6 +28,11 @@ import (
 	_billingRepo "notification/core/billing/repository"
 	_billingUcase "notification/core/billing/usecase"
 
+	//System
+	_systemKafka "notification/core/system/delivery/kafka"
+	_systemRepo "notification/core/system/repository"
+	_systemUcase "notification/core/system/usecase"
+
 	_utilRepo "notification/core/util/repository"
 	_utilUcase "notification/core/util/usecase"
 
@@ -54,6 +59,10 @@ func Init(db *sql.DB, firebase *_firebase.App) {
 	billingU := _billingUcase.NewUseCase(firebase, timeout, utilU, billingR)
 	billinKafka := _billingKafka.NewKafkaHandler(billingU)
 
+	systemR := _systemRepo.NewRepository(db)
+	systemU := _systemUcase.NewUseCase(firebase, timeout, utilU, systemR)
+	systeKafka := _systemKafka.NewKafkaHandler(systemU)
+
 	grupoRepo := _messageRepo.NewRepository(db)
 	grupoUcase := _messageUcase.NewUseCase(grupoRepo, firebase, timeout, utilU)
 
@@ -74,6 +83,7 @@ func Init(db *sql.DB, firebase *_firebase.App) {
 	go billinKafka.BillingNotificationConsumer()
 	go salaKafka.MessageSalaConsumer()
 	go conversationKafka.MessageConversationConsumer()
+	go systeKafka.NotificationDiffusionConsumer()
 
 	quitChannel := make(chan os.Signal, 1)
 	signal.Notify(quitChannel, syscall.SIGINT, syscall.SIGTERM)

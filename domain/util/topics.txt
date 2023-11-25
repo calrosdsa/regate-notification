@@ -3,3 +3,5 @@ sala-reservation-conflict
 notification-message-group
 billing-user
 sala-creation-group
+notification-message-conversation
+notification-diffusion

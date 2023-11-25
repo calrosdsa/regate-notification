@@ -23,8 +23,8 @@ func NewKafkaHandler(systemU r.SystemUseCase) SystemHandler {
 func (k *SystemHandler) NotificationDiffusionConsumer() {
 	r := kafka.NewReader(kafka.ReaderConfig{	
 		Brokers:   []string{viper.GetString("kafka.host")},
-		Topic:     "system",
-		GroupID:   "consumer-group-diffussion",
+		Topic:     "notification-diffusion",
+		GroupID:   "consumer-group-diffusion",
 		Partition: 0,
 		MaxBytes:  10e6, // 10MB
 	})

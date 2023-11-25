@@ -2,7 +2,9 @@ package usecase
 
 import (
 	"context"
-	"encoding/json"
+	"github.com/goccy/go-json"
+
+	// "encoding/json"
 	// "fmt"
 	"log"
 	r "notification/domain/repository"
@@ -38,14 +40,20 @@ func (u *systemUCase)SendNotificationDiffusion(ctx context.Context,d []byte) {
 		log.Println(err)
 		return
 	}
-	log.Println("DATA ---------",data)
-	// fcm_token,err := u.utilU.GetProfileFcmToken(ctx,data.EntityId)
-	// if err != nil{
-	// 	log.Println(err)
-	// }else{
-	// 	u.utilU.SendNotification(ctx,fcm_token,d,r.NotificationBilling,u.firebase)
-	// }
-
+	payload,err := json.Marshal(data.Notification)
+	if err != nil{
+		u.utilU.LogError("SendNotificationDiffusion","system_usecase",err.Error())
+	}
+	fcm_tokens,err := u.systemRepo.GetUserFcmTokens(ctx,data.Categories)
+	if err != nil{
+		u.utilU.LogError("SendNotificationDiffusion","system_usecase",err.Error())
+	}
+	for _,fcm :=range fcm_tokens {
+		if fcm.FcmToken != nil {	
+			u.utilU.SendNotification(ctx,*fcm.FcmToken,payload,r.NotificationEvent,u.firebase)
+		}
+	}
+	
 
 	
 	// err = u.SendNotificationUsersSala(ctx,message,r.NotificationSalaHasBeenReserved)

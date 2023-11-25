@@ -2,8 +2,8 @@ package usecase
 
 import (
 	"context"
-	"encoding/json"
-	// "fmt"
+	// "encoding/json"
+	"github.com/goccy/go-json"
 	"log"
 	r "notification/domain/repository"
 	"time"
