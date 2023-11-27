@@ -4,7 +4,7 @@ import "context"
 
 type SystemRepository interface {
 	// SendNotificationUserBilling(ctx context.Context, d []byte)
-	GetUserFcmTokens(ctx context.Context,categories []int)([]FcmToken,error)
+	GetUserFcmTokens(ctx context.Context, categories []int) ([]FcmToken, error)
 }
 
 type SystemUseCase interface {
@@ -12,13 +12,13 @@ type SystemUseCase interface {
 	// AddConsume(ctx context.Context,d Consumo)
 }
 
-
 type Notification struct {
 	Id         int        `json:"id"`
 	Title      string     `json:"title"`
 	Content    string     `json:"content"`
 	EntityId   int        `json:"entity_id"`
 	TypeEntity TypeEntity `json:"type_entity"`
+	Image      string    `json:"image"`
 	Read       bool       `json:"read"`
 	ProfileId  int        `json:"profile_id"`
 	CreatedAt  string     `json:"created_at,omitempty"`
