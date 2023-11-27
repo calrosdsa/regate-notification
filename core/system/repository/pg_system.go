@@ -22,9 +22,10 @@ func NewRepository(sql *sql.DB) r.SystemRepository {
 
 
 func (p systemRepo) GetUserFcmTokens(ctx context.Context,categories []int) (res []r.FcmToken, err error) {
-	query := `select p.fcm_token from profile_category  as pc
+	query := `select p.fcm_token,p.profile_id from profile_category  as pc
 	inner join profiles as p on p.profile_id = pc.profile_id
-	where pc.category_id = any($1)`
+	where pc.category_id = any($1) 
+	group by p.profile_id`
 	res, err = p.fetchFcmTokens(ctx, query, pq.Array(categories))
 	if err != nil {
 		log.Println("DEBUG_SQL", err)

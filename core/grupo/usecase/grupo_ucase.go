@@ -44,11 +44,14 @@ func (u *grupoUcase) SendNotificationSalaCreation(ctx context.Context, payload [
 	if err != nil {
 		return
 	}
+	log.Println("SENDIUNG TO USERS SALA")
 	// tokens := make([]string, len(fcm_tokens))
 	for _, val := range fcm_tokens {
 		// tokens = append(tokens, val.FcmToken)\
 		if val.FcmToken != nil {
-			u.utilU.SendNotification(ctx, *val.FcmToken, payload, r.NotificationSalaCreation,u.firebase)
+			if data.SenderId != val.ProfileId {
+				u.utilU.SendNotification(ctx, *val.FcmToken, payload, r.NotificationSalaCreation,u.firebase)
+			}
 		}
 	}
 	return

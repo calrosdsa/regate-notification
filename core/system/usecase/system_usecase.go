@@ -49,6 +49,7 @@ func (u *systemUCase)SendNotificationDiffusion(ctx context.Context,d []byte) {
 		u.utilU.LogError("SendNotificationDiffusion","system_usecase",err.Error())
 	}
 	for _,fcm :=range fcm_tokens {
+		log.Println(fcm.FcmToken,fcm.ProfileId)
 		if fcm.FcmToken != nil {	
 			u.utilU.SendNotification(ctx,*fcm.FcmToken,payload,r.NotificationEvent,u.firebase)
 		}

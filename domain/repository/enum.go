@@ -21,7 +21,7 @@ const (
 	NotificationSalaReservationConflict = 3
 	NotificationSalaHasBeenReserved = 4
 	NotificationBilling = 5
-	NotificationEvent = 6
+		NotificationEvent = 6
 )
 
 type ConsumoType int8
