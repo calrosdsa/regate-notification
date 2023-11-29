@@ -31,7 +31,7 @@ func (p salaRepo) GetLastMessagesFromSala(ctx context.Context, id int) (res []r.
 func (p *salaRepo) GetFcmTokensUserSalasSala(ctx context.Context,salaId int)(res []r.FcmToken,err error){
 	query := `select p.fcm_token,p.profile_id from users_sala as us
 	inner join profiles as p on p.profile_id = us.profile_id
-	where sala_id = $1`
+	where sala_id = $1 and is_out = false`
 
 	// select count(*) from users_sala as us
 	// inner join profiles as p on p.profile_id = us.profile_id
