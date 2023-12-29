@@ -1,0 +1,9 @@
+version: "3.7"
+services:
+  notification:
+    build: 
+      context: .
+    volumes:
+      - ./app/config.json:/app/config.json      
+      - ./app/serviceAccountKey.json:/app/serviceAccountKey.json
+      - ./app/log:/app/log

@@ -64,12 +64,12 @@ func Init(db *sql.DB, firebase *_firebase.App) {
 	systeKafka := _systemKafka.NewKafkaHandler(systemU)
 
 	grupoRepo := _messageRepo.NewRepository(db)
-	grupoUcase := _messageUcase.NewUseCase(grupoRepo, firebase, timeout, utilU)
+	grupoUcase := _messageUcase.NewUseCase(grupoRepo, firebase, timeout, utilU,wsAccountW)
 
 	grupoKafka := _messageKafka.NewKafkaHandler(grupoUcase)
 
 	salaRepo := _salaRepo.NewRepository(db)
-	salaUseCase := _salaUcase.NewUseCase(salaRepo, firebase, timeout, utilU, billingR)
+	salaUseCase := _salaUcase.NewUseCase(salaRepo, firebase, timeout, utilU, billingR,wsAccountW)
 	salaKafka := _salaKafka.NewKafkaHandler(salaUseCase)
 
 	conversation := _conversationRepo.NewRepository(db)

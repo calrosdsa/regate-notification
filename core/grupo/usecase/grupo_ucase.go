@@ -1,14 +1,12 @@
 package usecase
 
 import (
-	"bytes"
 	"context"
-	"fmt"
 	"log"
-	"net/http"
 	r "notification/domain/repository"
 
 	"github.com/goccy/go-json"
+	"github.com/segmentio/kafka-go"
 
 	// "strconv"
 
@@ -16,7 +14,6 @@ import (
 	"time"
 
 	firebase "firebase.google.com/go"
-	"github.com/spf13/viper"
 )
 
 type grupoUcase struct {
@@ -24,12 +21,19 @@ type grupoUcase struct {
 	timeout     time.Duration
 	firebase    *firebase.App
 	utilU       r.UtilUseCase
+	wsAccountW  *kafka.Writer
+
 }
 
 func NewUseCase(messageRepo r.GrupoRepository, firebase *firebase.App, timeout time.Duration,
-	utilU r.UtilUseCase) r.GrupoUseCase {
-	return &grupoUcase{messageRepo: messageRepo, firebase: firebase, timeout: timeout,
-	utilU: utilU,}
+	utilU r.UtilUseCase,wsAccountW *kafka.Writer) r.GrupoUseCase {
+	return &grupoUcase{
+		messageRepo: messageRepo,
+		firebase: firebase,
+		timeout: timeout,
+	    utilU: utilU,
+		wsAccountW: wsAccountW,
+	}
 }
 
 func (u *grupoUcase) SendNotificationSalaCreation(ctx context.Context, payload []byte) (err error) {
@@ -89,28 +93,13 @@ func (u *grupoUcase) SendNotificationToUsersGroup(ctx context.Context, message [
 			u.utilU.SendNotification(ctx, *val.FcmToken, byteMessages, r.NotificationMessageGroup,u.firebase)
 		}
 	}
+	log.Println("NOTIFICATIONS SENDED")
 	payloadData := r.MessageNotify{
 		Ids:  ids,
 		Data: message,
 		SenderId: data.ProfileId,
 	}
-	posturl := fmt.Sprintf("%s/ws/publish/grupo/message/", viper.GetString("hosts.main"))
-	// JSON body
-	body, err := json.Marshal(payloadData)
-
-	// Create a HTTP post request
-	r, err := http.NewRequest("POST", posturl, bytes.NewBuffer(body))
-	if err != nil {
-		panic(err)
-	}
-	r.Header.Add("Content-Type", "application/json")
-	client := &http.Client{}
-	res, err := client.Do(r)
-	if err != nil {
-		panic(err)
-	}
-
-	defer res.Body.Close()
+	u.utilU.SendMessageToKafka(u.wsAccountW,payloadData,string(r.KafkaPublishMessageEvent))
 	// log.Println("TOKENS", tokens)
 	return
 }

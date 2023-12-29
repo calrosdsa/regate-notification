@@ -1,11 +1,8 @@
 package usecase
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
-	"net/http"
 
 	// "fmt"
 	"log"
@@ -13,7 +10,7 @@ import (
 	"time"
 
 	firebase "firebase.google.com/go"
-	"github.com/spf13/viper"
+	"github.com/segmentio/kafka-go"
 )
 
 type salaUseCase struct {
@@ -22,16 +19,19 @@ type salaUseCase struct {
 	timeout  time.Duration
 	utilU    r.UtilUseCase
 	billingRepo r.BillingRepository
+	wsAccountW  *kafka.Writer
+
 }
 
 func NewUseCase(salaRepo r.SalaRepository, firebase *firebase.App, timeout time.Duration, utilU r.UtilUseCase,
-	billingRepo r.BillingRepository) r.SalaUseCase {
+	billingRepo r.BillingRepository,wsAccountW *kafka.Writer) r.SalaUseCase {
 	return &salaUseCase{
 		salaRepo: salaRepo,
 		timeout:  timeout,
 		firebase: firebase,
 		utilU:    utilU,
 		billingRepo: billingRepo,
+		wsAccountW: wsAccountW,
 	}
 }
 func (u *salaUseCase)SendNotificationMessageSala(ctx context.Context,message []byte)(err error){
@@ -71,24 +71,7 @@ func (u *salaUseCase)SendNotificationMessageSala(ctx context.Context,message []b
 		Data: message,
 		SenderId: data.ProfileId,
 	}
-	posturl := fmt.Sprintf("%s/ws/publish/grupo/message/", viper.GetString("hosts.main"))
-	// JSON body
-	body, err := json.Marshal(payloadData)
-
-	// Create a HTTP post request
-	r, err := http.NewRequest("POST", posturl, bytes.NewBuffer(body))
-	if err != nil {
-		panic(err)
-	}
-	r.Header.Add("Content-Type", "application/json")
-	client := &http.Client{}
-	res, err := client.Do(r)
-	if err != nil {
-		panic(err)
-	}
-
-	defer res.Body.Close()
-	// log.Println("TOKENS", tokens)
+	u.utilU.SendMessageToKafka(u.wsAccountW,payloadData,string(r.KafkaPublishMessageEvent))
 	return
 }
 

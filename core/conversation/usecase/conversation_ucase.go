@@ -112,13 +112,13 @@ func (u *conversationUseCase) SendNotificationMessageConversation(ctx context.Co
 		// Create a HTTP post request
 		r, err := http.NewRequest("POST", posturl, bytes.NewBuffer(body))
 		if err != nil {
-			panic(err)
+	        u.utilU.LogError("SendNotificationMessageConversation","grupo_ucase.go",err.Error())
 		}
 		r.Header.Add("Content-Type", "application/json")
 		client := &http.Client{}
 		res, err := client.Do(r)
 		if err != nil {
-			panic(err)
+		    u.utilU.LogError("SendNotificationMessageConversation","grupo_ucase.go",err.Error())
 		}
 		defer res.Body.Close()
 	}
